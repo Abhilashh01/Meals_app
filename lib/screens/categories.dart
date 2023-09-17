@@ -6,7 +6,7 @@ import 'package:meals/screens/meals.dart';
 import 'package:meals/widgets/category_item.dart';
 import 'package:meals/models/category.dart';
 
-class CategoriesScreen extends StatelessWidget {
+class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({
     super.key,
     required this.availabaleMeals,
@@ -14,8 +14,35 @@ class CategoriesScreen extends StatelessWidget {
 
   final List<Meal> availabaleMeals;
 
+  @override
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      lowerBound: 0,
+      upperBound: 1,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   void _selectCategory(BuildContext context, Category category) {
-    final filteredMeals = availabaleMeals
+    final filteredMeals = widget.availabaleMeals
         .where((meal) => meal.categories.contains(category.id))
         .toList();
     Navigator.push(
@@ -31,24 +58,39 @@ class CategoriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView(
-      padding: const EdgeInsets.all(26),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) => SlideTransition(
+        position: Tween(
+          begin: const Offset(0, 0.3),
+          end: const Offset(0, 0),
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.decelerate,
+          ),
+        ),
+        child: child,
       ),
-      children: [
-        // availableCategories.map((category) => CategoryGridItem(category: category)).toList()
-        for (final category in availableCategories)
-          CategoryGridItem(
-            category: category,
-            onSelectCategory: () {
-              _selectCategory(context, category);
-            },
-          )
-      ],
+      child: GridView(
+        padding: const EdgeInsets.all(26),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 1.5,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20,
+        ),
+        children: [
+          // availableCategories.map((category) => CategoryGridItem(category: category)).toList()
+          for (final category in availableCategories)
+            CategoryGridItem(
+              category: category,
+              onSelectCategory: () {
+                _selectCategory(context, category);
+              },
+            )
+        ],
+      ),
     );
   }
 }
